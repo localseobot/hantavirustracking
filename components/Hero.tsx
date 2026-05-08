@@ -1,0 +1,29 @@
+import Counters from "./Counters";
+
+export default function Hero() {
+  return (
+    <section className="relative overflow-hidden border-b border-white/[0.07]">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 pt-10 md:pt-16 pb-8 md:pb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#ef4444] hanta-pulse" />
+          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#fca5a5]">
+            Live · WHO multi-country cluster · Updated May 2026
+          </span>
+        </div>
+        <h1 className="font-syne text-4xl md:text-6xl font-bold tracking-tight text-[#f0f4ff] max-w-3xl">
+          Global hantavirus surveillance,
+          <span className="text-[#fca5a5]"> on a globe.</span>
+        </h1>
+        <p className="mt-4 max-w-2xl text-base md:text-lg text-[#8ea4c8] leading-relaxed">
+          Confirmed cases, deaths, and case-fatality rate from every reporting
+          country — compiled from WHO, CDC, ECDC, PAHO, ProMED, and national
+          ministries of health. Click any hot-spot on the globe for the full
+          breakdown.
+        </p>
+        <div className="mt-8">
+          <Counters />
+        </div>
+      </div>
+    </section>
+  );
+}
