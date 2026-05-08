@@ -53,6 +53,12 @@ export interface NewsItem {
   cluster?: boolean;
   /** Where this item came from in our pipeline ("seed" = hand-curated, "live" = RSS). */
   origin?: "seed" | "live";
+  /**
+   * Source tier:
+   *   - "official"  WHO / CDC / ECDC / PAHO / Africa CDC / ProMED — primary authority
+   *   - "media"     news aggregators (Google News, etc.)
+   */
+  tier?: "official" | "media";
 }
 
 export interface Source {

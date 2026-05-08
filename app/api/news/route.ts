@@ -153,6 +153,7 @@ async function fetchFeed(source: NewsSource): Promise<NewsItem[]> {
         tags,
         cluster,
         origin: "live",
+        tier: source.tier,
       });
     }
     return items;
@@ -180,11 +181,32 @@ function dedupe(items: NewsItem[]): NewsItem[] {
   return out;
 }
 
-export async function GET() {
-  const live = (
-    await Promise.all(NEWS_SOURCES.map((s) => fetchFeed(s)))
-  ).flat();
+/**
+ * Per-section slot caps. The cluster section can balloon to 100+ items
+ * during active outbreaks (Google News floods it); without explicit caps
+ * the cluster bucket would crowd out authoritative advisories entirely.
+ *
+ * Within the cluster bucket we further reserve slots for official-tier
+ * items so a CDC press release never gets pushed below the cap by sheer
+ * news-aggregator volume.
+ */
+const CAP_CLUSTER_OFFICIAL = 6;
+const CAP_CLUSTER_MEDIA = 14;
+const CAP_OFFICIAL = 12;
+const CAP_MEDIA = 12;
 
+export async function GET() {
+  // Fetch each source and tag the result with the source id so we can
+  // emit per-feed counts for ops/debugging.
+  const perSource = await Promise.all(
+    NEWS_SOURCES.map(async (s) => ({
+      id: s.id,
+      org: s.org,
+      tier: s.tier,
+      items: await fetchFeed(s),
+    }))
+  );
+  const live = perSource.flatMap((s) => s.items);
   const seed: NewsItem[] = NEW_SEED();
   const merged = [...live, ...seed].sort(
     (a, b) =>
@@ -192,10 +214,20 @@ export async function GET() {
   );
   const unique = dedupe(merged);
 
-  // Cluster items first, then chronological.
-  const cluster = unique.filter((i) => i.cluster);
-  const rest = unique.filter((i) => !i.cluster);
-  const ordered = [...cluster, ...rest].slice(0, 30);
+  const clusterOfficial = unique
+    .filter((i) => i.cluster && i.tier === "official")
+    .slice(0, CAP_CLUSTER_OFFICIAL);
+  const clusterMedia = unique
+    .filter((i) => i.cluster && i.tier !== "official")
+    .slice(0, CAP_CLUSTER_MEDIA);
+  const cluster = [...clusterOfficial, ...clusterMedia];
+  const official = unique
+    .filter((i) => !i.cluster && i.tier === "official")
+    .slice(0, CAP_OFFICIAL);
+  const media = unique
+    .filter((i) => !i.cluster && i.tier !== "official")
+    .slice(0, CAP_MEDIA);
+  const ordered = [...cluster, ...official, ...media];
 
   return Response.json({
     items: ordered,
@@ -204,12 +236,25 @@ export async function GET() {
       seed: seed.length,
       shown: ordered.length,
       cluster: cluster.length,
+      official: official.length,
+      media: media.length,
     },
-    sources: NEWS_SOURCES.map((s) => ({ id: s.id, org: s.org })),
+    sources: perSource.map((s) => ({
+      id: s.id,
+      org: s.org,
+      tier: s.tier,
+      itemCount: s.items.length,
+    })),
     fetchedAt: new Date().toISOString(),
   });
 }
 
 function NEW_SEED(): NewsItem[] {
-  return NEWS.map((n) => ({ ...n, origin: "seed", cluster: CLUSTER_KEYWORDS.test(`${n.title} ${n.summary}`) }));
+  return NEWS.map((n) => ({
+    ...n,
+    origin: "seed",
+    cluster: CLUSTER_KEYWORDS.test(`${n.title} ${n.summary}`),
+    // Hand-curated seed entries are all from authority publications.
+    tier: "official",
+  }));
 }

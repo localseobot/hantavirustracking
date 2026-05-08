@@ -21,7 +21,13 @@ function timeAgo(iso: string): string {
 
 interface NewsResponse {
   items: NewsItem[];
-  counts: { live: number; seed: number; shown: number; cluster: number };
+  counts: {
+    live: number;
+    seed: number;
+    shown: number;
+    cluster: number;
+    official?: number;
+  };
   fetchedAt: string;
 }
 
@@ -62,7 +68,8 @@ export default function NewsFeed() {
   }, []);
 
   const cluster = items.filter((i) => i.cluster);
-  const rest = items.filter((i) => !i.cluster);
+  const official = items.filter((i) => !i.cluster && i.tier === "official");
+  const media = items.filter((i) => !i.cluster && i.tier !== "official");
 
   return (
     <div className="rounded-xl border border-white/[0.07] bg-[#0e1628]/60 p-5">
@@ -79,7 +86,9 @@ export default function NewsFeed() {
           <div className="text-[10px] font-mono text-[#4a6080]">
             {loading
               ? "loading…"
-              : `${items.length} items${counts ? ` · ${counts.live} live` : ""}`}
+              : `${items.length} items${
+                  counts ? ` · ${counts.live} live` : ""
+                }`}
           </div>
           {fetchedAt && (
             <div
@@ -100,50 +109,106 @@ export default function NewsFeed() {
       )}
 
       {cluster.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#ef4444] hanta-pulse" />
-            <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#fca5a5]">
-              Active multi-country cluster · {cluster.length}{" "}
-              {cluster.length === 1 ? "alert" : "alerts"}
-            </span>
-          </div>
-          <ul className="space-y-2">
-            {cluster.map((n) => (
-              <NewsCard key={n.id} item={n} highlight />
-            ))}
-          </ul>
-        </div>
+        <Section
+          dotClass="bg-[#ef4444] hanta-pulse"
+          labelClass="text-[#fca5a5]"
+          label={`Active multi-country cluster · ${cluster.length} ${
+            cluster.length === 1 ? "alert" : "alerts"
+          }`}
+        >
+          {cluster.map((n) => (
+            <NewsCard key={n.id} item={n} highlight />
+          ))}
+        </Section>
       )}
 
-      <ul className="space-y-3">
-        {rest.map((n) => (
-          <NewsCard key={n.id} item={n} />
-        ))}
-      </ul>
+      {official.length > 0 && (
+        <Section
+          dotClass="bg-[#a78bfa]"
+          labelClass="text-[#c4b5fd]"
+          label={`Official advisories · ${official.length}`}
+        >
+          {official.map((n) => (
+            <NewsCard key={n.id} item={n} />
+          ))}
+        </Section>
+      )}
+
+      {media.length > 0 && (
+        <Section
+          dotClass="bg-[#34d399]"
+          labelClass="text-[#6ee7b7]"
+          label={`News media · ${media.length}`}
+        >
+          {media.map((n) => (
+            <NewsCard key={n.id} item={n} />
+          ))}
+        </Section>
+      )}
+    </div>
+  );
+}
+
+function Section({
+  label,
+  dotClass,
+  labelClass,
+  children,
+}: {
+  label: string;
+  dotClass: string;
+  labelClass: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-5 last:mb-0">
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`inline-block w-1.5 h-1.5 rounded-full ${dotClass}`} />
+        <span
+          className={`text-[10px] font-mono uppercase tracking-[0.16em] ${labelClass}`}
+        >
+          {label}
+        </span>
+      </div>
+      <ul className="space-y-2">{children}</ul>
     </div>
   );
 }
 
 function NewsCard({ item, highlight }: { item: NewsItem; highlight?: boolean }) {
   const isLive = item.origin === "live";
+  const isOfficial = item.tier === "official";
   return (
     <li
       className={`rounded-lg p-4 transition ${
         highlight
           ? "border border-[#ef4444]/40 bg-[#ef4444]/[0.06] hover:border-[#ef4444]/60"
-          : "border border-white/[0.05] bg-white/[0.02] hover:border-[#34d399]/30"
+          : isOfficial
+            ? "border border-[#a78bfa]/25 bg-white/[0.02] hover:border-[#a78bfa]/45"
+            : "border border-white/[0.05] bg-white/[0.02] hover:border-[#34d399]/30"
       }`}
     >
       <div className="flex items-baseline justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span
             className={`text-[10px] font-mono uppercase tracking-[0.14em] ${
-              highlight ? "text-[#fca5a5]" : "text-[#fbbf24]"
+              highlight
+                ? "text-[#fca5a5]"
+                : isOfficial
+                  ? "text-[#c4b5fd]"
+                  : "text-[#fbbf24]"
             }`}
           >
             {item.source}
           </span>
+          {isOfficial && (
+            <span
+              className="text-[9px] font-mono uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-full bg-[#a78bfa]/15 text-[#c4b5fd] border border-[#a78bfa]/30"
+              title="Issued by a public-health authority (WHO / CDC / ECDC / PAHO / Africa CDC / ProMED)"
+            >
+              GOV
+            </span>
+          )}
           {isLive && (
             <span
               className="text-[9px] font-mono uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-full bg-[#34d399]/15 text-[#6ee7b7] border border-[#34d399]/30"
