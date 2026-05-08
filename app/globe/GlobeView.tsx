@@ -5,6 +5,8 @@ import Link from "next/link";
 import Globe from "@/components/Globe";
 import CountryDetail from "@/components/CountryDetail";
 import Legend from "@/components/Legend";
+import LogoMark, { Wordmark } from "@/components/LogoMark";
+import UpdateCountdown from "@/components/UpdateCountdown";
 import { COUNTRIES, totals } from "@/lib/data/countries";
 import type { CountryCase } from "@/lib/types";
 
@@ -16,18 +18,23 @@ export default function GlobeView() {
     <div className="fixed inset-0 bg-[#080d1a] flex flex-col overflow-hidden">
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-3 md:p-4">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/[0.07] bg-[#0e1628]/80 backdrop-blur hover:border-[#ef4444]/30 transition"
-        >
-          <span className="inline-block w-2 h-2 rounded-full bg-[#ef4444] hanta-pulse" />
-          <span className="font-syne text-sm font-bold text-[#f0f4ff]">
-            Hantavirus.Tracking
-          </span>
-          <span className="text-[10px] font-mono text-[#4a6080] hidden md:inline">
-            ← back
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/[0.07] bg-[#0e1628]/80 backdrop-blur hover:border-[#ef4444]/30 transition"
+          >
+            <LogoMark size={22} />
+            <Wordmark />
+            <span className="text-[10px] font-mono text-[#4a6080] hidden md:inline">
+              ← back
+            </span>
+          </Link>
+          <UpdateCountdown
+            variant="compact"
+            hideSeconds
+            className="hidden lg:inline-flex"
+          />
+        </div>
 
         <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-lg border border-white/[0.07] bg-[#0e1628]/80 backdrop-blur">
           <Stat label="Cases" value={t.cases.toLocaleString()} accent="#fca5a5" />

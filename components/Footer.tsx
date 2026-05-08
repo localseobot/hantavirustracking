@@ -1,13 +1,17 @@
+import LogoMark, { Wordmark } from "./LogoMark";
+import UpdateCountdown from "./UpdateCountdown";
+
 export default function Footer() {
   return (
     <footer className="border-t border-white/[0.07] bg-[#080d1a]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
         <div>
-          <div className="flex items-center gap-2.5 mb-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-[#ef4444]" />
-            <span className="font-syne text-base font-bold text-[#f0f4ff]">
-              Hantavirus.Tracking
-            </span>
+          <div className="flex items-center gap-2.5 mb-3">
+            <LogoMark size={22} />
+            <Wordmark />
+          </div>
+          <div className="mb-3">
+            <UpdateCountdown variant="compact" />
           </div>
           <p className="text-[#8ea4c8] leading-relaxed text-xs">
             An independent dashboard aggregating publicly reported hantavirus
