@@ -49,6 +49,10 @@ export interface NewsItem {
   url: string;
   summary: string;
   tags: string[];
+  /** True when this item matches active-cluster keywords (cruise / MV Hondius / etc). */
+  cluster?: boolean;
+  /** Where this item came from in our pipeline ("seed" = hand-curated, "live" = RSS). */
+  origin?: "seed" | "live";
 }
 
 export interface Source {
