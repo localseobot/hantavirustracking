@@ -16,30 +16,30 @@ export default function Header() {
             hideSeconds
             className="hidden md:inline-flex"
           />
-          <a
-            href="#globe"
+          <Link
+            href="/outbreaks/mv-hondius"
+            className="hidden lg:inline px-3 py-1.5 rounded-md text-[#fca5a5] hover:text-white transition font-semibold"
+          >
+            Hondius cluster
+          </Link>
+          <Link
+            href="/#globe"
             className="hidden lg:inline px-3 py-1.5 rounded-md text-[#8ea4c8] hover:text-[#f0f4ff] transition"
           >
             Globe
-          </a>
-          <a
-            href="#trends"
-            className="hidden lg:inline px-3 py-1.5 rounded-md text-[#8ea4c8] hover:text-[#f0f4ff] transition"
-          >
-            Trends
-          </a>
-          <a
-            href="#countries"
+          </Link>
+          <Link
+            href="/#countries"
             className="hidden lg:inline px-3 py-1.5 rounded-md text-[#8ea4c8] hover:text-[#f0f4ff] transition"
           >
             Countries
-          </a>
-          <a
-            href="#sources"
+          </Link>
+          <Link
+            href="/about"
             className="hidden lg:inline px-3 py-1.5 rounded-md text-[#8ea4c8] hover:text-[#f0f4ff] transition"
           >
-            Sources
-          </a>
+            About
+          </Link>
           <Link
             href="/globe"
             className="ml-1 md:ml-2 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#ef4444]/15 text-[#fca5a5] border border-[#ef4444]/30 hover:bg-[#ef4444]/25 transition"

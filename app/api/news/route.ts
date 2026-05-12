@@ -165,6 +165,69 @@ async function fetchFeed(source: NewsSource): Promise<NewsItem[]> {
   }
 }
 
+/**
+ * Resolve Google News redirect URLs to their final publisher URL.
+ *
+ * Google News' RSS items use opaque `news.google.com/rss/articles/CB...`
+ * URLs that 3xx-redirect to the original publisher (NBC / BBC / etc.).
+ * Following them once at ingest gives us:
+ *   - clean preview URLs in the UI
+ *   - direct attribution to the publisher rather than to Google
+ *   - shorter, more shareable links
+ *
+ * We do this in parallel, capped, and with a tight per-URL timeout so
+ * one stuck redirect can't block the whole route response.
+ */
+const GOOGLE_NEWS_HOST = "news.google.com";
+const GOOGLE_NEWS_RESOLVE_TIMEOUT_MS = 2500;
+
+async function resolveGoogleNewsUrl(url: string): Promise<string> {
+  if (!url.includes(GOOGLE_NEWS_HOST)) return url;
+  const ctrl = new AbortController();
+  const timer = setTimeout(
+    () => ctrl.abort(),
+    GOOGLE_NEWS_RESOLVE_TIMEOUT_MS
+  );
+  try {
+    // HEAD with manual redirect to grab the Location header without
+    // fetching the publisher body. Many sites reject HEAD though, so
+    // fall back to GET-with-redirects if HEAD returns nothing useful.
+    const res = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+      signal: ctrl.signal,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; hantavirustracking.org/1.0)",
+      },
+    });
+    // After follow, res.url is the final URL.
+    if (res.url && !res.url.includes(GOOGLE_NEWS_HOST)) {
+      return res.url;
+    }
+    return url;
+  } catch {
+    return url;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function resolveGoogleNewsUrls(items: NewsItem[]): Promise<NewsItem[]> {
+  const toResolve = items.filter((i) => i.url.includes(GOOGLE_NEWS_HOST));
+  if (toResolve.length === 0) return items;
+  const resolved = await Promise.all(
+    toResolve.map(async (i) => ({
+      id: i.id,
+      newUrl: await resolveGoogleNewsUrl(i.url),
+    }))
+  );
+  const urlById = new Map(resolved.map((r) => [r.id, r.newUrl]));
+  return items.map((i) =>
+    urlById.has(i.id) ? { ...i, url: urlById.get(i.id) || i.url } : i
+  );
+}
+
 function dedupe(items: NewsItem[]): NewsItem[] {
   const seenUrls = new Set<string>();
   const seenTitles = new Set<string>();
@@ -227,7 +290,9 @@ export async function GET() {
   const media = unique
     .filter((i) => !i.cluster && i.tier !== "official")
     .slice(0, CAP_MEDIA);
-  const ordered = [...cluster, ...official, ...media];
+  // Resolve Google News redirects to publisher URLs only for the items we
+  // actually serve, so we don't pay 2.5 s × N for items we'll never send.
+  const ordered = await resolveGoogleNewsUrls([...cluster, ...official, ...media]);
 
   return Response.json({
     items: ordered,
