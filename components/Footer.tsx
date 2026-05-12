@@ -68,7 +68,7 @@ export default function Footer() {
         </div>
         <div>
           <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#4a6080] mb-2">
-            Disclaimer
+            Medical disclaimer
           </div>
           <p className="text-xs text-[#8ea4c8] leading-relaxed">
             For informational use only. Not medical advice. If you suspect
@@ -77,11 +77,43 @@ export default function Footer() {
           </p>
         </div>
       </div>
+
+      {/* Independence / non-affiliation notice — full-width strip so it can't
+          be missed. Required disclosure: this site is privately operated and
+          republishes only publicly accessible data. */}
+      <div className="border-t border-white/[0.07] bg-[#fbbf24]/[0.04]">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-5">
+          <div className="flex items-start gap-3 border-l-2 border-[#fbbf24]/40 pl-4">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#fbbf24] mb-1.5">
+                Independence notice
+              </div>
+              <p className="text-xs md:text-sm text-[#e8d9b3] leading-relaxed max-w-4xl">
+                <strong className="text-[#fde68a]">
+                  hantavirustracking.org is not a government agency and is not
+                  affiliated with, endorsed by, or sponsored by the U.S. CDC,
+                  the World Health Organization, ECDC, PAHO, Africa CDC, or any
+                  national, state, or local public-health authority.
+                </strong>{" "}
+                This site is an independent project that aggregates and
+                republishes information from publicly accessible sources —
+                RSS feeds, press releases, surveillance bulletins, fact sheets,
+                and news media — for informational purposes only. All trademarks,
+                logos, and agency names belong to their respective owners and are
+                used solely to identify the source of each cited item. For
+                authoritative guidance, always consult the cited primary source
+                directly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="border-t border-white/[0.05] py-4">
         <div className="mx-auto max-w-7xl px-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-2 text-[11px] font-mono text-[#4a6080]">
-          <span>© 2026 hantavirustracking.org</span>
+          <span>© 2026 hantavirustracking.org · independent project</span>
           <span>
-            Data refreshed manually from cited sources · No live API
+            Live RSS aggregated from WHO · CDC · ECDC · PAHO · news media
           </span>
         </div>
       </div>
