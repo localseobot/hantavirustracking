@@ -1,14 +1,15 @@
 /**
  * Data refresh cadence for the dashboard.
  *
- * The dataset in `lib/data/countries.ts` is hand-curated from WHO / ECDC /
- * PAHO / national-MoH bulletins. The intent is to land a refresh every
- * Monday at 12:00 UTC (which lines up with ECDC's weekly TESSy publication
- * window). Public-facing countdown reads off this constant so the page
- * never lies about its own staleness.
+ * The dataset in `lib/data/countries.ts` is curated from WHO / ECDC /
+ * PAHO / Africa CDC / national-MoH bulletins. During the active
+ * outbreak we land a refresh every day at 12:00 UTC — early enough
+ * to capture overnight bulletins from the Americas (PAHO, Argentina,
+ * Chile) and aligned with the start of the European public-health
+ * working day. The public-facing countdown reads off these constants
+ * so the page never lies about its own staleness.
  */
 
-export const UPDATE_DAY_OF_WEEK = 1; // Monday (Sun = 0)
 export const UPDATE_HOUR_UTC = 12;
 
 export interface CountdownParts {
@@ -22,9 +23,9 @@ export interface CountdownParts {
 }
 
 /**
- * Returns the timestamp of the next scheduled data refresh, expressed as a
- * Date in UTC. If today is Monday and we are before 12:00 UTC, it returns
- * today at 12:00 UTC. Otherwise it returns the next Monday at 12:00 UTC.
+ * Returns the timestamp of the next scheduled daily refresh, expressed as a
+ * Date in UTC. If `now` is before today's UPDATE_HOUR_UTC the target is
+ * today at that hour; otherwise it rolls to tomorrow at that hour.
  */
 export function getNextUpdate(now: Date = new Date()): Date {
   const target = new Date(
@@ -38,14 +39,9 @@ export function getNextUpdate(now: Date = new Date()): Date {
       0
     )
   );
-
-  // Days to add to get to the next UPDATE_DAY_OF_WEEK at >= UPDATE_HOUR_UTC.
-  const todayDow = target.getUTCDay();
-  let delta = (UPDATE_DAY_OF_WEEK - todayDow + 7) % 7;
-  if (delta === 0 && now.getTime() >= target.getTime()) {
-    delta = 7;
+  if (now.getTime() >= target.getTime()) {
+    target.setUTCDate(target.getUTCDate() + 1);
   }
-  target.setUTCDate(target.getUTCDate() + delta);
   return target;
 }
 

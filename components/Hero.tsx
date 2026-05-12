@@ -18,13 +18,13 @@ export default function Hero() {
           <UpdateCountdown variant="compact" />
         </div>
         <h1 className="font-syne text-4xl md:text-6xl font-bold tracking-tight text-[#f0f4ff] max-w-3xl">
-          Global hantavirus surveillance,
-          <span className="text-[#fca5a5]"> on a globe.</span>
+          Global hantavirus
+          <span className="text-[#fca5a5]"> surveillance.</span>
         </h1>
         <p className="mt-4 max-w-2xl text-base md:text-lg text-[#8ea4c8] leading-relaxed">
           Confirmed cases, deaths, and case-fatality rate from every reporting
-          country — compiled from WHO, CDC, ECDC, PAHO, ProMED, and national
-          ministries of health. Click any hot-spot on the globe for the full
+          country — compiled daily from WHO, CDC, ECDC, PAHO, and national
+          ministries of health. Click any hot-spot for the full country
           breakdown.
         </p>
         <div className="mt-8">

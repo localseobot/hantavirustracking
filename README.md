@@ -55,6 +55,11 @@ All data is hand-curated TypeScript — no live API yet. To refresh:
 4. Update `lib/data/timeline.ts` once a year for the trend chart.
 5. Add a `lib/data/news.ts` entry whenever a major bulletin or RRA drops.
 
+The public countdown in the hero/header is wired to **daily 12:00 UTC**
+via `lib/update-schedule.ts` — change the constant in that file if you
+want a different cadence. The live `/api/news` RSS ingest is independent
+and revalidates every 5 minutes regardless.
+
 `npm run build` verifies typing; if a row is malformed it will fail fast.
 
 ## Adding a live data source later
