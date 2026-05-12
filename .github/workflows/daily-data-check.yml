@@ -1,0 +1,77 @@
+name: Daily data check
+
+# Runs at 11:30 UTC daily — 30 minutes before the public-facing countdown
+# target of 12:00 UTC, so a maintainer who reviews the PR by noon UTC can
+# land any country-data edits within the published refresh window.
+on:
+  schedule:
+    - cron: "30 11 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: daily-data-check
+  cancel-in-progress: false
+
+jobs:
+  data-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Compute today's UTC date
+        id: date
+        run: |
+          echo "iso=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+          echo "human=$(date -u +'%a %b %d %Y')" >> "$GITHUB_OUTPUT"
+
+      - name: Run data-check script
+        env:
+          NEWS_API_URL: https://hantavirustracking.org/api/news
+        run: node scripts/data-check.mjs
+
+      - name: Open / update pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "data-check: digest for ${{ steps.date.outputs.iso }}"
+          title: "Data check — ${{ steps.date.outputs.human }}"
+          body: |
+            Automated daily data check covering the last 24 hours of
+            outbreak signal from WHO, CDC, ECDC, PAHO, Africa CDC, and
+            news media (the same RSS pipeline powering `/api/news`).
+
+            **What to do with this PR**
+
+            1. Read `DATA_CHECK.md` (the only file changed by this bot).
+            2. Eyeball the "Numeric mentions" table — these are raw
+               regex matches, not validated figures. Click through to
+               each source to confirm.
+            3. If any country's case count, deaths, or notes should
+               change, edit `lib/data/countries.ts` directly on this
+               branch and bump the row's `lastUpdated` to today.
+            4. If nothing needs to change today, close this PR. The
+               workflow will regenerate the digest tomorrow.
+            5. Merging the PR commits today's digest to `main` and
+               triggers a Vercel redeploy.
+
+            ---
+
+            _Source: `.github/workflows/daily-data-check.yml` →_
+            _`scripts/data-check.mjs`._
+          branch: bot/daily-data-check
+          delete-branch: false
+          add-paths: |
+            DATA_CHECK.md
+          labels: |
+            data-check
+            automated

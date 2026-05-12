@@ -60,6 +60,58 @@ via `lib/update-schedule.ts` — change the constant in that file if you
 want a different cadence. The live `/api/news` RSS ingest is independent
 and revalidates every 5 minutes regardless.
 
+## Automated daily data check
+
+A GitHub Action runs every day at **11:30 UTC** (30 minutes before the
+public countdown target) and posts a draft pull request with a digest of
+the last 24 hours of outbreak signal:
+
+- `.github/workflows/daily-data-check.yml` — the cron schedule + the
+  `peter-evans/create-pull-request@v7` step that opens / updates the PR.
+- `scripts/data-check.mjs` — the script. Hits the production
+  `/api/news` endpoint, filters items to the last 24 h, splits them by
+  cluster status and source tier, runs case-count regexes over titles
+  and summaries, and writes the result to `DATA_CHECK.md`.
+
+**The script deliberately does not auto-edit `lib/data/countries.ts`.**
+Numeric mentions extracted from RSS headlines are surfaced for review,
+not auto-applied — wrong numbers in a public-health dashboard are worse
+than no update. The PR's job is to put the right links and the right
+numbers in front of you so the manual edit takes 60 seconds.
+
+### One-time repo setup
+
+The action needs permission to open pull requests. In the GitHub repo
+settings:
+
+1. **Settings → Actions → General → Workflow permissions**
+   - Set "Read and write permissions"
+   - Tick **"Allow GitHub Actions to create and approve pull requests"**
+2. (Optional) **Settings → Branches → main → Protect**
+   - Require a PR review before merging if you want a second pair of eyes.
+
+### Running it locally
+
+```bash
+node scripts/data-check.mjs        # writes DATA_CHECK.md vs prod /api/news
+NEWS_API_URL=http://localhost:3000/api/news node scripts/data-check.mjs
+HOURS_WINDOW=48 node scripts/data-check.mjs    # widen the window
+```
+
+### Daily flow once it's running
+
+1. Action fires at 11:30 UTC.
+2. PR `bot/daily-data-check` opens or updates with the regenerated
+   `DATA_CHECK.md`.
+3. You skim the "Official advisories" + "Numeric mentions" sections
+   (usually <60 s).
+4. If a country's case count or notes should change, edit
+   `lib/data/countries.ts` directly on the PR branch and bump that row's
+   `lastUpdated` to today.
+5. Merge → Vercel auto-deploys → public counters refresh.
+6. If nothing needs to change, close the PR. The action will regenerate
+   it tomorrow.
+
 `npm run build` verifies typing; if a row is malformed it will fail fast.
 
 ## Adding a live data source later
