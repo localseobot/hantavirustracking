@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Syne, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -51,7 +52,19 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${syne.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/* Ad delivery (apitiny). `afterInteractive` injects the tag at the
+            end of <body> once the page is interactive — equivalent to the
+            recommended "just before </body>" placement, with proper
+            de-duplication across client-side navigations. */}
+        <Script
+          src="https://cdn.apitiny.net/scripts/v2.0/main.js"
+          strategy="afterInteractive"
+          data-site-id="6a04b872e6b82fcabe00f648"
+          data-test-mode="false"
+        />
+      </body>
     </html>
   );
 }
